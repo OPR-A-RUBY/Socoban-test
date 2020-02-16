@@ -1,2 +1,1 @@
-# test
-for testing and learn git and githab.
+# test for testing and learn git and githab.
