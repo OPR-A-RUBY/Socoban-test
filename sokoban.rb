@@ -12,6 +12,7 @@ class GameMap
         @x_map = 0      # размер поля по горизонтали
         @y_map = 0      # размер поля по вертикали
         @b_map = 0      # количество контейнеров на уровне
+        @h_map = 0      # количество домов для контейнеров на уровне
         @out_p = nil    # причина аварийного завешения
         @comb = ''
         @a_file = ''    # Текст уровня из файла
@@ -55,7 +56,7 @@ class GameMap
     
     def read_level      # Выбор уровня, чтение карты уровня из файла ==
         
-        if @map.size == 0  # Есди начало игры, то 00 уровень.
+        if @map.size == 0  # Если начало игры, то 00 уровень.
             @map << -1     # Далее будет += 1 и получим 00
         end
         
@@ -69,8 +70,46 @@ class GameMap
         num_level = '0' + num_level if num_level.size == 1
                             # Формирование имени файла-уровня
         file_data_level = 'data/level_' + num_level + '.txt'
-                            # Чтение карты уровня
-        @a_file = File.open(file_data_level, 'r'){ |file| file.read }
+
+        row_lines = []      # Открываем файл для считывания карты
+        
+        input = File.open(file_data_level, 'r')
+
+        while (line = input.gets)       # Считывает строчку из файла
+            
+            row_lines << line.chomp     # Добавляем её в массив
+        end
+
+        input.close         # Закрывает файл
+
+puts row_lines
+gets
+                            # Обработка row_lines
+        @x_map = 0          # Максимальная длинна строки = 0
+        @y_map = 0          # Количество строк = 0 
+        row_lines.each do |line|  # перебираем строчки по очереди
+
+            # Запомнить новую макс.длину
+            #                        Если дилина этой строки ещё больше 
+            @x_map = line.size if line.size > @x_map  
+
+            @y_map +=1                  # Количество строк в карте (+1)
+
+        end
+puts @x_map
+puts @y_map
+gets
+        @a_file = ''       # Очищаем переменную для ввода нового уровня
+        
+        row_lines.each do |line|
+        
+            @a_file += line + (' ' * (@x_map - line.size))
+            
+        end
+
+puts @a_file.size
+gets
+
     end
     
     def braun opt       # ОБРАБОТКА ХОДА. =============================
@@ -160,7 +199,7 @@ class GameMap
         1.upto(@y_map) do |y|
                 
             print " |X"                 # Рамка в начале строки
-            1.upto(@x_map) do |x|
+            0.upto(@x_map) do |x|
                         
                 i = x + (y-1) * @x_map # Вычисляем индекс по координ.
                 
@@ -200,52 +239,54 @@ class GameMap
     end
 
     def contr_size      # Проверка целостности карты. =================
-            @s_map = @map.size
-            1.upto(@s_map) do |i|
-                if @map[i] == 9
-                    puts "Неизвестный символ в карте."
-                end
-            end
-            if @s_map != @x_map * @y_map + 1
+        @s_map = @map.size
+        if @s_map != @x_map * @y_map 
             puts "Размер массива не соответствует размеру карты"
-            puts "#{@s_map} = #{@x_map} * #{@y_map} + 1 "
+            puts "#{@s_map} = #{@x_map} * #{@y_map} "
+            gets
+        end    
+        if @b_map != @h_map
+            puts "Количесто контейнеров не равно количеству мест."
+            puts " Контенеров: #{@b_map},    мест под них: #{@h_map}."
             gets
         end
     end
     
     def in_data         # Заполнение данными карты. ===================
-        lev = ''
-        xlev = ''
-        ylev = ''
-        boxl = ''
-        @map = []
-        a_file.each_char.with_index do |ch, i|
-            if i <= 2                   # Номер уровня
-                lev = lev + ch
-            elsif i >= 4 && i <= 6       # Размер карта Х
-                xlev = xlev + ch
-            elsif i >= 8 && i <=10       # Размер карта У
-                ylev = ylev + ch
-            elsif i >=12 && i <= 14      # Количество контейнеров 
-                boxl = boxl + ch
-            elsif i == 15
-                @map << lev.to_i
-            elsif i == 3 || i == 7 || i == 11
-                sleep 0
-            elsif ch == '@'
-                @map << 2 
-                @boy_ = @map.size - 1
-            else 
-                @map << 0 if ch == ' '  
-                @map << 8 if ch == '#'    
-                @map << 4 if ch == 'o'
-                @map << 3 if ch == '.'
+        lev = ''        # 
+        xlev = ''       # 
+        ylev = ''       # 
+        boxl = ''       # 
+        @map = []       # Массив карты текущего уровня
+        x = 0
+        xm = @x_map
+        @a_file.each_char.with_index do |ch, i|
+
+            x += 1 
+               
+            case ch
+                
+                when '@' then           # Человек
+                    @map << 2                   
+                    @boy_ = @map.size - 1
+
+                when 'o' then           # Контейнер
+                    @map << 4   
+                    @b_map += 1 
+
+                when '.' then           # Дом 
+                    @map << 3 
+                    @h_map += 1
+
+                when ' ' then           # Пустота 
+                    @map << 0  
+
+                when '#' then           # Стена
+                    @map << 8                  
+            
             end
         end
-        @x_map = xlev.to_i
-        @y_map = ylev.to_i
-        @b_map = boxl.to_i
-        
+                
         ###[M V-puts "lev = #{lev}  x = #{xlev}  y = #{ylev} K = #{boxl}"
         ###@map.each { |item| print "#{item}"}
         ###gets
