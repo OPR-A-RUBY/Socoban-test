@@ -1,3 +1,4 @@
+#  ! SOKOBAN !
 # test for testing and learn git and githab.
 
 Запуск по команде: ruby sokoban.rb
