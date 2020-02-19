@@ -64,15 +64,16 @@ class GameMap
         num_level = gets.strip 
         
         if num_level == ''  # Ничего не ввели, то следующий уровень
-            num_level = (@map[0] + 1).to_s
+            num_level = (@map[0].to_i + 1).to_s
         end
                             # Получение двух зхнаков уровня
         num_level = '0' + num_level if num_level.size == 1
+        
                             # Формирование имени файла-уровня
         file_data_level = 'data/level_' + num_level + '.txt'
 
-        row_lines = []      # Открываем файл для считывания карты
-        
+        row_lines = []      
+                            # Открываем файл для считывания карты
         input = File.open(file_data_level, 'r')
 
         while (line = input.gets)       # Считывает строчку из файла
@@ -82,6 +83,9 @@ class GameMap
 
         input.close         # Закрывает файл
 
+        @map = []
+        @map << num_level   # Запоминаем номер уровня в массив.
+        
 puts row_lines
 gets
                             # Обработка row_lines
@@ -96,8 +100,8 @@ gets
             @y_map +=1                  # Количество строк в карте (+1)
 
         end
-puts @x_map
-puts @y_map
+puts "x_map = #{@x_map}"
+puts "y_map = #{@y_map}"
 gets
         @a_file = ''       # Очищаем переменную для ввода нового уровня
         
@@ -107,6 +111,7 @@ gets
             
         end
 
+print "Размер @a_file = "
 puts @a_file.size
 gets
 
@@ -184,22 +189,13 @@ gets
     
     def out_map         # Вывод карты на экран. =======================
     
-        def pr_line     # Вывод полосы "+++...+++" на экран (расчётное)
-            print " +-"
-            (@x_map*2).times {print "-"} 
-            puts "-+ " 
-        end
-    
         j = 1 
         
-        pr_line                                # верхняя линия окна
         puts "  Уровень #{@map[0]}    Контейнеров #{@b_map} "
-        pr_line                                # верхняя линия рамки 
         
         1.upto(@y_map) do |y|
                 
-            print " |X"                 # Рамка в начале строки
-            0.upto(@x_map) do |x|
+            1.upto(@x_map) do |x|
                         
                 i = x + (y-1) * @x_map # Вычисляем индекс по координ.
                 
@@ -229,20 +225,33 @@ gets
                 end 
                 j += 1
             end
-            print "X| " # Рамка в конце строки
+
             print "\n"  # Закончилась строка вывода, переводим курсор
             j = 1       # "Обнуляем" счётчик места в строке.
                 
         end
-        pr_line   # нижняя линия рамки
     
     end
 
     def contr_size      # Проверка целостности карты. =================
         @s_map = @map.size
-        if @s_map != @x_map * @y_map 
+
+       
+@map.each_with_index do |item, index|
+    if index == 0
+        print "Lrvel = @map[0] = #{item}"
+    else
+        print "#{item}" 
+    end
+
+    puts "-end line" if index % @x_map == 0
+
+end
+puts "123456789012345678" 
+gets 
+        if @s_map != @x_map * @y_map +1 
             puts "Размер массива не соответствует размеру карты"
-            puts "#{@s_map} = #{@x_map} * #{@y_map} "
+            puts "#{@s_map} = #{@x_map} * #{@y_map} + 1 "
             gets
         end    
         if @b_map != @h_map
@@ -257,9 +266,11 @@ gets
         xlev = ''       # 
         ylev = ''       # 
         boxl = ''       # 
-        @map = []       # Массив карты текущего уровня
         x = 0
         xm = @x_map
+
+        @h_map = @b_map = 0
+        
         @a_file.each_char.with_index do |ch, i|
 
             x += 1 
