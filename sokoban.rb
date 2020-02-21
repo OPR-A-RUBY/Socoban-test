@@ -2,7 +2,7 @@
 #
 class GameMap 
     
-    attr_accessor :b_map
+    attr_accessor :b_map, :num_level, :max_level
     attr_reader   :out_p, :comb, :akt, :a_file, :cur_box
     
     def initialize      # Инициализация объекта =======================
@@ -16,6 +16,7 @@ class GameMap
         @out_p = nil    # причина аварийного завешения
         @max_level = 50 # максимальный уровень
         @comb = ''
+        @num_level      # Переменная - номер уровня
         @a_file = ''    # Текст уровня из файла
         @akt = false    # Признан выпролненного хода
         @cur_box = false# Признак хода с толканием контейнера
@@ -55,30 +56,36 @@ class GameMap
         }
     end
     
-    def read_level      # Выбор уровня, чтение карты уровня из файла ==
+    def input_level                             # Вввод уровня карты ==
         
         if @map.size == 0  # Если начало игры, то 00 уровень.
             @map << -1     # Далее будет += 1 и получим 00
         end
 
         puts
-        print "Выберите уровень "
-        num_level = gets.strip 
+        print "Выберите уровень (0 - #{@max_level}) "
+        @num_level = gets.strip.to_i 
         
-        if num_level == ''  # Ничего не ввели, то следующий уровень
-            if @map[0].to_i == @max_level
+        if @num_level == ''  # Ничего не ввели, то следующий уровень
+            if @map[0] == @max_level
                 puts "Все уровни пройдены!"
                 exit
             end
-            num_level = (@map[0].to_i + 1).to_s
-            puts num_level
+            @num_level = (@map[0] + 1)
         end
-                            # Получение двух зхнаков уровня
-        num_level = '0' + num_level if num_level.size == 1
         
-                            # Формирование имени файла-уровня
-        file_data_level = 'data/level_' + num_level + '.txt'
+    end
+        
+    def read_level                    # Чтение карты уровня из файла ==
 
+        if @num_level.to_s.size == 1
+            number = '0' + @num_level.to_s
+        else
+            number = @num_level.to_s
+        end
+                            # Формирование имени файла-уровня
+        file_data_level = 'data/level_' + number + '.txt'
+        
         row_lines = []      
                             # Открываем файл для считывания карты
         input = File.open(file_data_level, 'r')
@@ -91,7 +98,7 @@ class GameMap
         input.close         # Закрывает файл
 
         @map = []
-        @map << num_level   # Запоминаем номер уровня в массив.
+        @map << @num_level   # Запоминаем номер уровня в массив.
         
         if $debug >= 2      ##########################################     
             puts row_lines  ##########################################
@@ -215,7 +222,8 @@ class GameMap
     def out_map         # Вывод карты на экран. =======================
     
         j = 1 
-        
+        puts '(Q)uit, (R)etry, (N)ext_level, (B)ack, (M)enu.'
+        puts '----------------------------------------------'
         puts "  Уровень #{@map[0]}    Контейнеров #{@b_map} "
         puts 
         
@@ -394,11 +402,12 @@ def getchar
          char
 end
 
+
 def menu_out
     puts '============================================================='
-    puts '(Q)uit - выход из игры.      (L)oad - загрузить новый уровень'
-    puts '(R)etry - снова начать       (B)ack - шаг назад'
-    puts '(N)ext level - Следующий уровень'
+    puts '(Q)uit - выход из игры.      (N)ext level - Следующий уровень'
+    puts '(R)etry - снова начать       (B)ack - шаг назад  '
+    puts '============================================================='
     puts 
     puts '________________ У П Р А В Л ЕН Н И Е  ______________________'
     puts '                       ВВЕРХ'
@@ -407,8 +416,7 @@ def menu_out
     puts '                        (X)'
     puts '                       ВНИЗ.'
     puts '============================================================='
-    puts "Для продолжения нажмите Пробел или Enter" 
-    gets
+    
 end
 
 # =====================================================================
@@ -422,6 +430,7 @@ menu_out
 $debug = 0               # Уровень отладки (1, 2, 3) (0 - нет отладки)
  
 map_games = GameMap.new
+map_games.input_level
 map_games.read_level
 map_games.in_data
 map_games.contr_size
@@ -445,6 +454,7 @@ loop do                    # ОСНОВНАЯ ПЕТЛЯ ПРОГРАММЫ
     if map_games.b_map == 0
         puts "Good!"
         gets
+        map_games.input_level
         map_games.read_level
         map_games.in_data
         map_games.contr_size
@@ -486,21 +496,43 @@ loop do                    # ОСНОВНАЯ ПЕТЛЯ ПРОГРАММЫ
         map_games.back :director => mas_action[-1], :boxer => mas_b[-1]
         mas_action.pop
         mas_b.pop
-    elsif kl == 'M'
+        
+    elsif kl == 'M'                 # Меню
         system('clear')
         menu_out
-    elsif kl == 'R'
-        map_games.in_data 
-        map_games.contr_size
-        p += 1
-        t = 0
-        mas_action =[]
-    elsif kl == 'N'
-        puts "Не готово! Здесь будет отработка перехода на следующий."
-        exit    
-    elsif kl == 'Q'
+        puts "Для продолжения нажмите Пробел или Enter"
+        gets
+        
+    elsif kl == 'N'                 # Следующий уровень
+    
+        if $debug >=2                                       ###########
+            puts                                            ###########
+            puts map_games.num_level                        ###########
+            puts map_games.max_level                        ###########
+            gets                                            ###########
+        end                                                 ###########
+        
+        if map_games.num_level < map_games.max_level
+            map_games.num_level += 1 
+            map_games.read_level
+            map_games.in_data
+            map_games.contr_size
+            p = 1
+            t = 0
+            mas_action =[]
+            mas_b = []
+            system('clear')
+            puts
+            map_games.out_map
+        else
+            puts "Это максимальный уровень"
+            sleep 0.3    
+        end
+           
+    elsif kl == 'Q'                 # Выход из игры
         break
-    elsif kl == 'L'
+        
+    elsif kl == 'R'                 # Зашрузить с начала уровень
         map_games.read_level
         map_games.in_data
         map_games.contr_size
@@ -508,16 +540,18 @@ loop do                    # ОСНОВНАЯ ПЕТЛЯ ПРОГРАММЫ
         t = 0
         mas_action =[]
         mas_b = []
-    elsif kl=='S' || kl=='X' || kl=='Z' || kl=='C'
+        
+    elsif kl=='S' || kl=='X' || kl=='Z' || kl=='C' # Передвижение (ХОД)
         map_games.braun :director => action_, :comb => ''
-
         if map_games.akt
             mas_action << action_        # Запомним направление
             mas_b << map_games.cur_box   # Запомним наличие контейнера
         end
+        
     else
         t -= 1
         map_games.akt == false
+        
     end
 end
 
