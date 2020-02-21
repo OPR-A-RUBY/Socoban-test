@@ -14,6 +14,7 @@ class GameMap
         @b_map = 0      # количество контейнеров на уровне
         @h_map = 0      # количество домов для контейнеров на уровне
         @out_p = nil    # причина аварийного завешения
+        @max_level = 50 # максимальный уровень
         @comb = ''
         @a_file = ''    # Текст уровня из файла
         @akt = false    # Признан выпролненного хода
@@ -59,12 +60,18 @@ class GameMap
         if @map.size == 0  # Если начало игры, то 00 уровень.
             @map << -1     # Далее будет += 1 и получим 00
         end
-        
+
+        puts
         print "Выберите уровень "
         num_level = gets.strip 
         
         if num_level == ''  # Ничего не ввели, то следующий уровень
+            if @map[0].to_i == @max_level
+                puts "Все уровни пройдены!"
+                exit
+            end
             num_level = (@map[0].to_i + 1).to_s
+            puts num_level
         end
                             # Получение двух зхнаков уровня
         num_level = '0' + num_level if num_level.size == 1
@@ -86,8 +93,10 @@ class GameMap
         @map = []
         @map << num_level   # Запоминаем номер уровня в массив.
         
-puts row_lines
-gets
+        if $debug >= 2      ##########################################     
+            puts row_lines  ##########################################
+            gets            ##########################################
+        end
                             # Обработка row_lines
         @x_map = 0          # Максимальная длинна строки = 0
         @y_map = 0          # Количество строк = 0 
@@ -100,9 +109,13 @@ gets
             @y_map +=1                  # Количество строк в карте (+1)
 
         end
-puts "x_map = #{@x_map}"
-puts "y_map = #{@y_map}"
-gets
+        
+        if $debug >= 1                  ###############################
+            puts "x_map = #{@x_map}"    ###############################
+            puts "y_map = #{@y_map}"    ###############################
+            gets                        ###############################
+        end                             ###############################
+
         @a_file = ''       # Очищаем переменную для ввода нового уровня
         
         row_lines.each do |line|
@@ -110,11 +123,13 @@ gets
             @a_file += line + (' ' * (@x_map - line.size))
             
         end
-
-print "Размер @a_file = "
-puts @a_file.size
-gets
-
+        
+        if $debug >= 1                      ###########################
+            print "Размер @a_file = "       ###########################
+            puts @a_file.size               ###########################
+            gets                            ###########################
+        end                                 ###########################
+        
     end
     
     def braun opt       # ОБРАБОТКА ХОДА. =============================
@@ -147,10 +162,7 @@ gets
         
         # Получаем комбинацию полей для движения:
         #    pl_0  ->    pl_1   ->   pl_2
-        # 
-        # а точнее вот так:
-        #  
-        #   @map[pl_0] => @map[pl_1] => @map[pl_2]
+        # а точнее вот так: @map[pl_0] => @map[pl_1] => @map[pl_2]
         
         @comb = @map[pl_1].to_s + @map[pl_2].to_s
         @akt = true      # перед началом проверки = "ход возможен!"
@@ -158,8 +170,12 @@ gets
         if @hh[comb] == '--'
             @out_p = "No action '#{comb}' - combination."
             @akt = false # Здесь меняем на " Ход НЕВОЗМОЖЕН"
-            ### puts @out_p
-            ### gets        
+            
+            if $debug >= 2                                  ###########
+                puts @out_p                                 ###########
+                gets                                        ###########
+            end                                             ###########
+            
         elsif @comb=='40' || @comb=='43' || @comb=='70' || @comb=='73'
             # Двигаем контейнер в ячейку PL-2 из PL-1
             @map[pl_2] += 4     # pl2 + box
@@ -173,7 +189,11 @@ gets
             @boy_ = pl_1
             @out_p = "Push action '#{@comb}' - combination."
             
-            ### puts @out_p
+            if $debug >= 2                                  ###########
+                puts @out_p                                 ###########
+                gets                                        ###########
+            end                                             ###########
+            
         else
             # Двигаем человечка в ячейку PL-1 из PL-0
             @map[pl_1] += 2     # pl1 + man
@@ -182,7 +202,12 @@ gets
                                        
             @boy_ = pl_1
             @out_p = "Step action '#{@comb}' - combination."
-            ### puts @out_p
+
+            if $debug >= 2                                  ###########
+                puts @out_p                                 ###########
+                gets                                        ###########
+            end                                             ###########
+            
         end
           
     end
@@ -192,6 +217,7 @@ gets
         j = 1 
         
         puts "  Уровень #{@map[0]}    Контейнеров #{@b_map} "
+        puts 
         
         1.upto(@y_map) do |y|
                 
@@ -236,19 +262,23 @@ gets
     def contr_size      # Проверка целостности карты. =================
         @s_map = @map.size
 
-       
-@map.each_with_index do |item, index|
-    if index == 0
-        print "Lrvel = @map[0] = #{item}"
-    else
-        print "#{item}" 
-    end
-
-    puts "-end line" if index % @x_map == 0
-
-end
-puts "123456789012345678" 
-gets 
+       if $debug >= 2                                       ###########
+        @map.each_with_index do |item, index|               ###########
+            if index == 0                                   ###########
+                print "Lrvel = @map[0] = #{item}"           ###########
+            else                                            ###########
+                print "#{item}"                             ###########
+            end                                             ###########
+                                                            ###########
+            puts "-end line" if index % @x_map == 0         ###########
+                                                            ###########
+        end                                                 ###########
+                puts @out_p                                 ###########
+                gets                                        ###########
+       puts "123456789012345678"                            ###########
+       gets                                                 ###########
+       end                                                  ###########
+                                                            ###########        
         if @s_map != @x_map * @y_map +1 
             puts "Размер массива не соответствует размеру карты"
             puts "#{@s_map} = #{@x_map} * #{@y_map} + 1 "
@@ -297,18 +327,28 @@ gets
             
             end
         end
-                
-        ###[M V-puts "lev = #{lev}  x = #{xlev}  y = #{ylev} K = #{boxl}"
-        ###@map.each { |item| print "#{item}"}
-        ###gets
+
+        if $debug >= 2                                              ###
+        puts "lev = #{lev}  x = #{xlev}  y = #{ylev} K = #{boxl}"   ###
+        @map.each { |item| print "#{item}"}                         ###
+        gets                                                        ###
+        end                                                         ###
+
+        if $debug >= 3                                      ###########
+            @map.each_with_index do |item, i|               ###########
+               print "#{item},"                             ###########
+               puts "" if (i) % @x_map == 0                 ###########
+            end                                             ###########
+        end                                                 ###########
         
-        ### @map.each_with_index do |item, i|
-        ###    print "#{item},"
-        ###    puts "" if (i) % @x_map == 0
-        ###end
+        if $debug >= 2                                      ###########
+            puts "Уровень в @map[0] = #{@map[0]}"           ###########
+            puts "@x_map = #{@x_map}"                       ###########
+            puts "@y_map = #{@y_map}"                       ###########
+            puts "Контейнеры @b_map = #{@b_map}"            ###########
+            gets                                            ###########
+        end                                                 ###########
         
-        ###puts "#{@map[0]} = #{@x_map} = #{@y_map} = #{@b_map}"
-        ###gets
     end
     
     def box             # Расчёт количества оставшихся контейнеров. ===
@@ -347,7 +387,7 @@ gets
     end
 end
 
-def getchar
+def getchar 
          system("stty raw -echo") # Прямой ввод без эхо-контроля.
          char = STDIN.getc
          system("stty -raw echo") # Восстановить режим терминала.
@@ -357,7 +397,8 @@ end
 def menu_out
     puts '============================================================='
     puts '(Q)uit - выход из игры.      (L)oad - загрузить новый уровень'
-    puts '(N)ew  - снова начать        (B)ack - шаг назад'
+    puts '(R)etry - снова начать       (B)ack - шаг назад'
+    puts '(N)ext level - Следующий уровень'
     puts 
     puts '________________ У П Р А В Л ЕН Н И Е  ______________________'
     puts '                       ВВЕРХ'
@@ -366,16 +407,19 @@ def menu_out
     puts '                        (X)'
     puts '                       ВНИЗ.'
     puts '============================================================='
+    puts "Для продолжения нажмите Пробел или Enter" 
+    gets
 end
 
 # =====================================================================
 #                                 
 # =====================================================================
+ 
 
-
-system('clear')             # Очистка экрана
+system('clear')          # Очистка экрана
 
 menu_out
+$debug = 0               # Уровень отладки (1, 2, 3) (0 - нет отладки)
  
 map_games = GameMap.new
 map_games.read_level
@@ -386,12 +430,17 @@ p = 1
 t = 0
 mas_action = []
 mas_b = []
-loop do 
+
+loop do                    # ОСНОВНАЯ ПЕТЛЯ ПРОГРАММЫ
 
     map_games.box               # Считаем контейнеры не на месте.
     system('clear')             # Очистка экрана
-    puts "#{map_games.akt} = #{map_games.out_p}" # Выводим сервисное сообщение
-    map_games.out_map           # Выводим карту
+   
+                                # Выводим сервисное сообщение
+    puts "#{map_games.akt} = #{map_games.out_p}" if $debug >= 1
+                             
+                                # Выводим карту
+    map_games.out_map
 
     if map_games.b_map == 0
         puts "Good!"
@@ -408,10 +457,17 @@ loop do
         map_games.out_map   
     end   
     
-    ### mas_action.each_with_index {|item, i| puts "#{i} - #{item}"}
+    if $debug >= 3
+        mas_action.each_with_index {|item, i| puts "#{i} - #{item}"}
+        gets
+    end
+    
     t += 1
-    print "Попытка #{p}    Ход № #{t}.  Введите (s,x,z,c) => "
+    puts 
+    puts "Попытка #{p}    Ход № #{t}."
+    print "     Введите (s,x,z,c) => "
     kl = ''
+    
     while kl == ''
         kl = getchar.capitalize
     end
@@ -420,8 +476,12 @@ loop do
     action_ = 'DOWN' if kl == 'X'
     action_ = 'LEFT' if kl == 'Z'
     action_ = 'RIGHT' if kl == 'C'
-    
-    puts kl
+
+    if $debug == 2
+        puts "Начата кнопка #{kl}"
+        gets
+    end
+
     if (kl == 'B' || kl == ' ') && mas_action.size != 0
         map_games.back :director => mas_action[-1], :boxer => mas_b[-1]
         mas_action.pop
@@ -429,14 +489,15 @@ loop do
     elsif kl == 'M'
         system('clear')
         menu_out
-        puts "Для продолжения нажмите Пробел или Enter" 
-        gets
-    elsif kl == 'N'
+    elsif kl == 'R'
         map_games.in_data 
         map_games.contr_size
         p += 1
         t = 0
         mas_action =[]
+    elsif kl == 'N'
+        puts "Не готово! Здесь будет отработка перехода на следующий."
+        exit    
     elsif kl == 'Q'
         break
     elsif kl == 'L'
@@ -452,7 +513,7 @@ loop do
 
         if map_games.akt
             mas_action << action_        # Запомним направление
-            mas_b << map_games.cur_box   # Запомним насичие контейнера
+            mas_b << map_games.cur_box   # Запомним наличие контейнера
         end
     else
         t -= 1
@@ -460,4 +521,5 @@ loop do
     end
 end
 
+puts 
 puts "GAME OVER!"
